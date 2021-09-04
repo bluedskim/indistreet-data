@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 	<meta charset='utf-8'>
 	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -22,7 +21,30 @@
 				$('#example').DataTable({
 					data: results.data,
 					columns: [
-						{ "data": "filename" }
+						{
+							data: "venue_id"
+							,title: "venue_id"
+						}
+						,{
+							data: "filename"
+							,title: "파일명"
+						}
+						,{
+							data: "event_count"
+							,title: "이벤트 횟수"
+						}
+						,{
+							data: "address"
+							,title: "주소"
+						}
+						,{
+							data: "lat"
+							,title: "위도"
+						}
+						,{
+							data: "lng"
+							,title: "경도"
+						}
 					]
 				});
 			}
@@ -30,13 +52,8 @@
 	})		
 	</script>
 </head>
-
 <body>
-	<table id="example" class="display" width="100%">
-		<tr>
-			<th>ID</th>
-		</tr>
-	</table>
+	<table id="example" class="display" width="100%"></table>
 </body>
 
 </html>
