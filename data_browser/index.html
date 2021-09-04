@@ -7,10 +7,21 @@
 	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 	<script src="http://papaparse.com/resources/js/papaparse.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.min.css">
+	<style>
+		td.details-control {
+			background: url('https://datatables.net/examples/resources/details_open.png') no-repeat center center;
+			cursor: pointer;
+		}
+		tr.shown td.details-control {
+			background: url('https://datatables.net/examples/resources/details_close.png') no-repeat center center;
+		}		
+	</style>
 	<script type="text/javascript" src="https://cdn.datatables.net/1.11.1/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" src="https://cdn.datatables.net/1.11.1/js/dataTables.bootstrap4.min.js"></script>
 	
 	<script>
+	var venueTbl;
+	var musicionTbl;
 	$(document).ready(function(){
 		Papa.parse("../venue.csv", {
 			header: true,
@@ -18,16 +29,22 @@
 			complete: function (results) {
 				console.log(results);
 
-				$('#venueTbl').DataTable({
+				venueTbl = $('#venueTbl').DataTable({
 					data: results.data,
 					columns: [
+						{
+							className: 'details-control',
+							orderable: false,
+							data: null,
+							defaultContent: ''
+						},
 						{
 							data: "venue_id"
 							,title: "venue_id"
 						}
 						,{
 							data: "filename"
-							,title: "파일명"
+							,title: "이름"
 						}
 						,{
 							data: "event_count"
@@ -46,10 +63,25 @@
 							,title: "경도"
 						}
 					]
+					,order: [[1, 'asc']]					
 				});
+
+				$('#venueTbl tbody').on('click', 'td.details-control', function () {
+					console.debug('clicked');
+					var tr = $(this).closest('tr');
+					var row = venueTbl.row(tr);
+
+					if (row.child.isShown()) {
+						row.child.hide();
+						tr.removeClass('shown');
+					} else {
+						row.child(format('venue_json', row.data())).show();
+						tr.addClass('shown');
+					}
+				});				
 			}
 		});
-
+				
 		Papa.parse("../musician.csv", {
 			header: true,
 			download: true,
@@ -65,7 +97,7 @@
 						}
 						,{
 							data: "filename"
-							,title: "파일명"
+							,title: "이름"
 						}
 						,{
 							data: "event_count"
@@ -75,15 +107,95 @@
 				});
 			}
 		});		
-	})		
+	})
+
+	function format(folderPath, rowData) {
+		var div = $('<div/>')
+			.addClass('loading')
+			.text('Loading...');
+		$.ajax({
+			url: '../' + folderPath + '/' + rowData.venue_id + '_' + rowData.filename + '.json',
+			dataType: 'json',
+			success: function (json) {
+				div.html(jsonToTable(json)).removeClass('loading');
+			}
+		});
+
+		return div;
+	}
+	
+	/**
+	 * json을 테이블로 변환
+	 */
+	function jsonToTable(json) {
+		var rows = [];
+
+		$.each(json, function (key, value) {
+			var row = '<tr><td>' + key + '</td>';
+			if(Array.isArray(value)) {
+				row += '<td>' + jsonArrayToTable(value) + '</td>';
+			} else {
+				row += '<td>' + value + '</td>';
+			}
+			row += '</tr>';
+			rows.push(row);
+		})
+
+		//build the table
+		const table = `
+		<table>
+			<tbody>
+				${rows}
+			<tbody>
+		<table>`;
+
+		return table;
+	}
+
+	/**
+	 * json array를 테이블로 변환
+	*/
+	function jsonArrayToTable(json) {
+		let cols = Object.keys(json[0]);
+
+		//Map over columns, make headers,join into string
+		let headerRow = cols
+			.map(col => `<th>${col}</th>`)
+			.join("");
+
+		//map over array of json objs, for each row(obj) map over column values,
+		//and return a td with the value of that object for its column
+		//take that array of tds and join them
+		//then return a row of the tds
+		//finally join all the rows together
+		let rows = json
+			.map(row => {
+				let tds = cols.map(col => `<td>${row[col]}</td>`).join("");
+				return `<tr>${tds}</tr>`;
+			})
+			.join("");
+
+		//build the table
+		const table = `
+		<table>
+			<thead>
+				<tr>${headerRow}</tr>
+			</thead>
+			<tbody>
+				${rows}
+			</tbody>
+		</table>`;
+
+		return table;
+	}	
 	</script>
 </head>
 <body>
-	<table id="musicianTbl" class="display" width="100%">
+	<table id="musicianTbl" class="display compact" width="100%">
 		<caption>뮤지션</caption>
 	</table>
 
-	<table id="venueTbl" class="display" width="100%">
+	<table id="venueTbl" class="display compact" width="100%">
 		<caption>공연장</caption>
 	</table>
 </body>
