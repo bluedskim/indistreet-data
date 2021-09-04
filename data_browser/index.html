@@ -3,7 +3,7 @@
 <head>
 	<meta charset='utf-8'>
 	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
-	<title>Page Title</title>
+	<title>Indistreet data browser</title>
 	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 	<script src="http://papaparse.com/resources/js/papaparse.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.1/css/jquery.dataTables.min.css">
@@ -18,7 +18,7 @@
 			complete: function (results) {
 				console.log(results);
 
-				$('#example').DataTable({
+				$('#venueTbl').DataTable({
 					data: results.data,
 					columns: [
 						{
@@ -49,11 +49,41 @@
 				});
 			}
 		});
+
+		Papa.parse("../musician.csv", {
+			header: true,
+			download: true,
+			complete: function (results) {
+				console.log(results);
+
+				$('#musicianTbl').DataTable({
+					data: results.data,
+					columns: [
+						{
+							data: "musician_id"
+							,title: "musician_id"
+						}
+						,{
+							data: "filename"
+							,title: "파일명"
+						}
+						,{
+							data: "event_count"
+							,title: "이벤트 횟수"
+						}
+					]
+				});
+			}
+		});		
 	})		
 	</script>
 </head>
 <body>
-	<table id="example" class="display" width="100%">
+	<table id="musicianTbl" class="display" width="100%">
+		<caption>뮤지션</caption>
+	</table>
+
+	<table id="venueTbl" class="display" width="100%">
 		<caption>공연장</caption>
 	</table>
 </body>
